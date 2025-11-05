@@ -102,10 +102,23 @@
 
         .celebration {
             display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .celebration-text {
             font-size: 3rem;
             font-family: 'Send Flowers', cursive;
             animation: pulse 2s infinite;
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .celebration-gif {
+            max-width: 300px;
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         @keyframes fadeInDown {
@@ -159,8 +172,12 @@
                 letter-spacing: 2px;
             }
 
-            .celebration {
+            .celebration-text {
                 font-size: 1.8rem;
+            }
+
+            .celebration-gif {
+                max-width: 200px;
             }
         }
     </style>
@@ -187,12 +204,13 @@
             </div>
         </div>
         <div class="celebration" id="celebration">
-            🎉 Annushka is here! 🎉
+            <div class="celebration-text">🎉 Annushka is here! 🎉</div>
+            <img src="https://c.tenor.com/aXzAokW5P3oAAAAd/tenor.gif" alt="Celebration" class="celebration-gif">
         </div>
     </div>
 
     <script>
-        const targetDate = new Date('2025-11-12T23:00:00+01:00').getTime();
+        const targetDate = new Date('2025-11-10T23:00:00+01:00').getTime();
 
         function updateCountdown() {
             const now = new Date().getTime();
@@ -200,7 +218,7 @@
 
             if (distance < 0) {
                 document.getElementById('countdown').style.display = 'none';
-                document.getElementById('celebration').style.display = 'block';
+                document.getElementById('celebration').style.display = 'flex';
                 return;
             }
 
