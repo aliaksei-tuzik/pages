@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Option 10 — bathroom preview</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; }
+      body { margin: 0; overflow: hidden; background: #192026; }
+      canvas { display: block; }
+      #label {
+        position: fixed; right: 10px; bottom: 10px; z-index: 1;
+        padding: 4px 7px; border-radius: 5px; color: #afbdc1;
+        font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+        background: rgb(15 21 25 / 55%); pointer-events: none;
+      }
+      #error { color: #ffae9e; margin-top: 8px; display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="label">Option 10</div>
+    <p id="error"></p>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x192026);
+
+      const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.01, 100);
+      camera.position.set(4.2, -3.8, 3.7);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(1.02, 0.80, -1.82);
+      controls.enableDamping = true;
+      controls.minDistance = 1.1;
+      controls.maxDistance = 9;
+
+      scene.add(new THREE.HemisphereLight(0xeef6ff, 0x27343b, 2.2));
+      const key = new THREE.DirectionalLight(0xfff2dc, 2.2);
+      key.position.set(2, -2, 5);
+      scene.add(key);
+
+      const error = document.querySelector("#error");
+      new GLTFLoader().load(
+        "option_10_default_layers.glb",
+        (gltf) => {
+          scene.add(gltf.scene);
+          const floor = gltf.scene.getObjectByName(
+            "Finished screed surface — depth unverified, no structural slab",
+          );
+          if (floor) {
+            const floorBounds = new THREE.Box3().setFromObject(floor);
+            controls.target.copy(floorBounds.getCenter(new THREE.Vector3()));
+            controls.target.y += 0.80;
+          }
+          camera.position.copy(controls.target).add(new THREE.Vector3(3.2, 2.7, 3.8));
+          controls.update();
+        },
+        undefined,
+        () => {
+          error.textContent = "Model did not load. Start a local web server instead of opening this file directly.";
+          error.style.display = "block";
+        },
+      );
+
+      addEventListener("resize", () => {
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(innerWidth, innerHeight);
+      });
+      renderer.setAnimationLoop(() => {
+        controls.update();
+        renderer.render(scene, camera);
+      });
+    </script>
+  </body>
+</html>
