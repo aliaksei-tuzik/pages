@@ -15,10 +15,19 @@
         background: rgb(15 21 25 / 55%); pointer-events: none;
       }
       #error { color: #ffae9e; margin-top: 8px; display: none; }
+      #layers { position:fixed; bottom:10px; left:10px; z-index:1; color:#bfcbcf;
+        font-size:11px; background:rgb(15 21 25 / 70%); padding:5px 8px; border-radius:5px; }
+      #layers label { display:block; margin-top:5px; }
     </style>
   </head>
   <body>
     <div id="label">Option 10</div>
+    <details id="layers"><summary>Layers</summary>
+      <label><input type="checkbox" data-layer="12" checked>Electrical routes</label>
+      <label><input type="checkbox" data-layer="13" checked>Floor heating coverage</label>
+      <label><input type="checkbox" data-layer="14" checked>Optional tank / hooks</label>
+      <label><input type="checkbox" data-layer="15" checked>Hot source switching</label>
+    </details>
     <p id="error"></p>
     <script type="importmap">
       {
@@ -62,6 +71,13 @@
         "option_10_default_layers.glb",
         (gltf) => {
           scene.add(gltf.scene);
+          document.querySelectorAll('[data-layer]').forEach((input) => {
+            input.addEventListener('change', () => gltf.scene.traverse((object) => {
+              if ((object.userData.preview_layer || '').startsWith(input.dataset.layer)) {
+                object.visible = input.checked;
+              }
+            }));
+          });
           const floor = gltf.scene.getObjectByName(
             "Finished screed surface — depth unverified, no structural slab",
           );
