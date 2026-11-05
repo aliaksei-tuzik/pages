@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kitchen — 3D preview</title><link rel="icon" href="data:,">
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#20272d}canvas{display:block;touch-action:none}button,a,summary{touch-action:manipulation}button,a{color:#edf1f3;background:#27333c;border:1px solid #55636d;border-radius:7px;padding:7px 10px;font:inherit;font-size:12px;text-decoration:none;cursor:pointer}button:hover,a:hover{background:#3a4b58}button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #99d2ed;outline-offset:3px}#toolbar{position:fixed;top:12px;left:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;z-index:1}h1{margin:0 8px 0 0;font-size:15px;font-weight:600;color:#ecf0f2}#layers{position:fixed;bottom:12px;left:12px;z-index:1;padding:9px 12px;border-radius:8px;background:#172128e8;color:#d2dde2;font-size:12px;max-height:55vh;overflow:auto}#layers label{display:block;margin-top:9px}#layers input{margin-right:8px;accent-color:#9bcee5}#status{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#172128ef;color:#e2ebee;padding:12px 18px;border-radius:8px;max-width:90vw;text-align:center;z-index:2}#help{position:fixed;bottom:12px;right:12px;font-size:11px;color:#bbc7ce;background:#172128b0;padding:6px 8px;border-radius:6px;pointer-events:none}@media(max-width:600px){#help{max-width:170px;font-size:10px}#toolbar{gap:5px}button,a{padding:8px}h1{width:100%;font-size:14px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="toolbar"><h1>Kitchen</h1><button data-view="kitchen">Kitchen</button><button data-view="room">Whole room</button><button data-view="top">Top</button><a href="kitchen_inspection.glb" download>Download GLB</a><a href="../bathroom-option-10/">Bathroom</a></div>
+<details id="layers"><summary>Layers</summary><label><input type="checkbox" data-layers="42" checked>Wall frames</label><label><input type="checkbox" data-layers="34" checked>Cabinet frames</label><label><input type="checkbox" data-layers="16" checked>Water &amp; drainage</label><label><input type="checkbox" data-layers="26,28,29" checked>Stored items</label><label><input type="checkbox" data-layers="31" checked>Table &amp; chairs</label><label><input type="checkbox" data-layers="36,37,38,39,44" checked>Light fixtures</label></details>
+<div id="status" role="status" aria-live="polite">Loading kitchen…</div><div id="help">Drag to orbit · scroll / pinch to zoom<br>Right drag / two fingers to pan</div>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const status=document.querySelector('#status');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x20272d);
+const camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.02,100);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;document.body.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=.5;controls.maxDistance=20;controls.maxPolarAngle=Math.PI*.95;
+scene.add(new THREE.HemisphereLight(0xf1f6ff,0x45423d,2.3));
+for(const [position,power] of [[[2,7,-4],2.5],[[-4,3,5],1.1]]){const light=new THREE.DirectionalLight(0xfff4e4,power);light.position.set(...position);scene.add(light)}
+const views={kitchen:{target:[1.1,1.1,.45],position:[3.9,3.7,-4.7]},room:{target:[.5,1,-1.15],position:[5.8,6.7,-8.5]},top:{target:[.3,0,-1.25],position:[.3,11,-1.249]}};
+let currentView='kitchen';
+function setView(key){currentView=key;const v=views[key];controls.target.set(...v.target);camera.position.set(...v.position);camera.position.sub(controls.target).multiplyScalar(Math.max(1,.9/camera.aspect)).add(controls.target);controls.update()}
+setView('kitchen');document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
+let model;
+function applyLayers(){document.querySelectorAll('[data-layers]').forEach(input=>{const ids=input.dataset.layers.split(',');model.traverse(o=>{if(ids.includes(o.userData.preview_layer))o.visible=input.checked})})}
+for(const input of document.querySelectorAll('[data-layers]'))input.addEventListener('change',()=>{if(model)applyLayers()});
+new GLTFLoader().load('kitchen_inspection.glb?v=20261105',gltf=>{model=gltf.scene;scene.add(model);applyLayers();status.hidden=true;document.documentElement.dataset.modelLoaded='true';window.kitchenPreview={scene,camera,controls,renderer,model,setView};},event=>{if(event.total)status.textContent=`Loading kitchen… ${Math.round(event.loaded/event.total*100)}%`;},()=>{status.textContent='Unable to load the model. Reload this page to try again.';document.documentElement.dataset.modelError='true';});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);setView(currentView)});
+renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
+</script>
+</body></html>
